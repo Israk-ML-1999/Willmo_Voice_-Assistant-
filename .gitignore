@@ -37,3 +37,6 @@ node_modules/
 *.bak
 *.swp
 *.swo
+# Audio files
+.*.mp3
+*.wav

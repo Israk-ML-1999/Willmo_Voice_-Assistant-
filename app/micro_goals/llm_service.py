@@ -2,6 +2,8 @@ import os
 import groq
 from dotenv import load_dotenv
 from .request import micro_goal_response
+from app.config import settings
+
 
 load_dotenv()
 
@@ -76,19 +78,27 @@ class Micro_goal:
         import re
 
         completion = self.client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=1000
+            max_tokens=700
         )
         response_text = completion.choices[0].message.content.strip()
         
         try:
+            # Remove markdown code blocks if present
+            response_text = re.sub(r'^```(?:json)?\s*', '', response_text, flags=re.MULTILINE)
+            response_text = re.sub(r'\s*```$', '', response_text, flags=re.MULTILINE)
+            
+            # Clean up whitespace and newlines
             response_text = response_text.encode('utf-8').decode('utf-8-sig')
             response_text = re.sub(r'[\r\n\t]', '', response_text)
 
-            if not response_text.startswith('{'): response_text = '{' + response_text
-            if not response_text.endswith('}'): response_text = response_text + '}'
+            # Ensure proper JSON boundaries
+            if not response_text.startswith('{'): 
+                response_text = '{' + response_text
+            if not response_text.endswith('}'): 
+                response_text = response_text + '}'
 
             response_dict = json.loads(response_text)
             
