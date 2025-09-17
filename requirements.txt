@@ -1,7 +1,8 @@
 fastapi
 uvicorn
-groq
+openai
 python-multipart
 pydantic
 gtts
 python-dotenv
+langdetect

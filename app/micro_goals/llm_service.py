@@ -1,5 +1,5 @@
 import os
-import groq
+import openai
 from dotenv import load_dotenv
 from .request import micro_goal_response
 from app.config import settings
@@ -9,7 +9,10 @@ load_dotenv()
 
 class Micro_goal:
     def __init__(self):
-        self.client = groq.Groq(api_key=os.getenv("GROQ_API_KEY"))
+        self.client = openai.OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=settings.OPENAI_API_BASE
+        )
 
     def create_daily_plan(self, input_data: dict) -> micro_goal_response:
         prompt = self.create_prompt(input_data)
@@ -78,7 +81,7 @@ class Micro_goal:
         import re
 
         completion = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=settings.CHAT_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
             max_tokens=700

@@ -11,12 +11,11 @@ class Settings:
     APP_DESCRIPTION: str = "A voice assistant with To-do, Job finding, and General chat capabilities"
     APP_VERSION: str = "1.0.0"
     
-    # ── Groq Configuration ─────────────────────────────────────────────────────
-    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_API_BASE: str = "https://api.groq.com"  # Base URL without any path
-    GROQ_API_VERSION: str = "openai/v1"  # API version path
-    LLAMA_MODEL: str = "llama-3.3-70b-versatile"
-    WHISPER_MODEL: str = "whisper-large-v3"
+    # ── OpenAI Configuration ─────────────────────────────────────────────────────
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_API_BASE: str = "https://api.openai.com/v1"  # Base URL without any path
+    CHAT_MODEL: str = "gpt-3.5-turbo"
+    WHISPER_MODEL: str = "whisper-1"
     WHISPER_RESPONSE_FORMAT: str = "text"  # Can be 'text', 'json', 'srt', 'verbose_json', or 'vtt'
     
     # ── Model Configuration 
@@ -98,8 +97,8 @@ class Settings:
     
     # Validation
     def __post_init__(self):
-        if not self.GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY environment variable is required")
+        if not self.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY environment variable is required")
 
 # Create settings instance
 settings = Settings()

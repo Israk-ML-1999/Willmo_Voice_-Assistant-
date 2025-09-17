@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class TTSRequest(BaseModel):
     text: str
+    gender: str = "female"  # "male" or "female"
 
 class VoiceToTextResponse(BaseModel):
     transcribed_text: str

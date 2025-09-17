@@ -46,13 +46,16 @@ async def convert_voice_to_text(audio: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing audio: {str(e)}")
 
 @router.post("/text-to-speech", summary="Convert text to speech")
-async def convert_text_to_speech(text: str = Form(...)):
-    """Convert text to speech and return audio file"""
+async def convert_text_to_speech(text: str = Form(...), gender: str = Form("female")):
+    """Convert text to speech and return audio file with gender selection"""
     if not text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
+    if gender not in ["male", "female"]:
+        raise HTTPException(status_code=400, detail="Gender must be 'male' or 'female'")
+    
     try:
-        audio_file_path = speech_service.text_to_speech(text)
+        audio_file_path = speech_service.text_to_speech(text, gender)
         return FileResponse(
             audio_file_path,
             media_type="audio/mpeg",

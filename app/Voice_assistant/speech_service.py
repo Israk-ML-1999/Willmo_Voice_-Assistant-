@@ -1,40 +1,66 @@
 from fastapi import HTTPException
-from gtts import gTTS
 import os
 import uuid
 import json
 from pathlib import Path
-from groq import Groq
+from openai import OpenAI
 from app.config import settings
+import langdetect
 
 class SpeechService:
     def __init__(self):
-        if not settings.GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY is required")
+        if not settings.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is required")
 
-        # Use the plain API base (not the chat-completions URL)
-        self.client = Groq(
-            api_key=settings.GROQ_API_KEY,
-            base_url=settings.GROQ_API_BASE  # e.g., "https://api.groq.com"
+        # Use OpenAI client
+        self.client = OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_API_BASE
         )
 
         os.makedirs(settings.TEMP_DIR, exist_ok=True)
         os.makedirs(settings.AUDIO_RESPONSE_PATH, exist_ok=True)
 
-    def text_to_speech(self, text: str) -> str:
-        """Convert text to speech and save as MP3"""
+    def text_to_speech(self, text: str, gender: str = "female") -> str:
+        """Convert text to speech using OpenAI TTS with gender selection and language detection"""
         try:
+            # Detect language
+            try:
+                detected_lang = langdetect.detect(text)
+            except:
+                detected_lang = "en"  # fallback to English
+            
+            # Map gender to OpenAI voice
+            voice_map = {
+                "male": "echo",
+                "female": "sage"
+            }
+            
+            voice = voice_map.get(gender.lower(), "coral")
+            
+            # Generate audio using OpenAI TTS
+            response = self.client.audio.speech.create(
+                model="gpt-4o-mini-tts",
+                voice=voice,
+                input=text,
+                response_format="mp3"
+            )
+            
+            # Save audio file
             filename = f"response_{uuid.uuid4()}.mp3"
             file_path = os.path.join(settings.AUDIO_RESPONSE_PATH, filename)
-            tts = gTTS(text=text, lang=settings.TTS_LANGUAGE)
-            tts.save(file_path)
+            
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            
             return file_path
+            
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error converting text to speech: {str(e)}")
 
     def speech_to_text(self, audio_file) -> str:
         """
-        Convert speech to text using Groq's Whisper model.
+        Convert speech to text using OpenAI's Whisper model.
         Accepts UploadFile or BytesIO. Will handle .filename or .name.
         """
         # Derive a filename (prefer .filename, else .name, else default)
@@ -56,10 +82,10 @@ class SpeechService:
             with open(temp_file_path, "wb") as f:
                 f.write(content)
 
-            # Call Groq Whisper
+            # Call OpenAI Whisper
             with open(temp_file_path, "rb") as f:
                 response = self.client.audio.transcriptions.create(
-                    model=settings.WHISPER_MODEL,                 # e.g., "whisper-large-v3"
+                    model=settings.WHISPER_MODEL,                 # e.g., "whisper-1"
                     file=f,
                     response_format=settings.WHISPER_RESPONSE_FORMAT  # e.g., "text" | "json"
                 )

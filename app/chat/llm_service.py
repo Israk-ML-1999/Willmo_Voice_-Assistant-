@@ -1,4 +1,4 @@
-from groq import Groq
+from openai import OpenAI
 from fastapi import HTTPException
 from typing import Optional, Dict
 from app.config import settings
@@ -6,11 +6,11 @@ from app.config import settings
 
 class ChatLLMService:
     def __init__(self):
-        if not settings.GROQ_API_KEY:
-            raise ValueError("GROQ_API_KEY is required")
-        self.client = Groq(
-            api_key=settings.GROQ_API_KEY,
-            base_url=settings.GROQ_API_BASE
+        if not settings.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is required")
+        self.client = OpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            base_url=settings.OPENAI_API_BASE
         )
 
     def generate_response(
@@ -46,7 +46,7 @@ class ChatLLMService:
             messages.append({"role": "user", "content": user_message})
 
             response = self.client.chat.completions.create(
-                model=settings.LLAMA_MODEL,
+                model=settings.CHAT_MODEL,
                 messages=messages,
                 max_tokens=settings.MAX_TOKENS,
                 temperature=settings.TEMPERATURE,
