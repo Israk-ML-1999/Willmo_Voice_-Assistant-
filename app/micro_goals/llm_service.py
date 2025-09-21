@@ -41,17 +41,18 @@ class Micro_goal:
             4) Verify: Each task is completely different from past suggestions.
             5) Ensure: age-appropriate, actionable tasks that haven't been suggested before.
             6) Balance: include tasks that reflect mind, soul/spirituality, and body when relevant.
-            7) Output: ONLY JSON (no extra text), short and clear.
+            7) Assign categories: "mind" for learning/skills, "soul" for emotional/spiritual, "body" for physical health.
+            8) Output: ONLY JSON (no extra text), short and clear.
 
             **JSON Output Contract (strict):**
             {{
             "big_goal": "{input_data['big_goal']}",
             "day_plan": [
-                {{ "title": "Skill Focus", "goal": "<string>" }},
-                {{ "title": "Calm Focus", "goal": "<string>" }},
-                {{ "title": "Healthy Energy", "goal": "<string>" }},
-                {{ "title": "Application Step", "goal": "<string>" }},
-                {{ "title": "Positive Spirit", "goal": "<string>" }}
+                {{ "category": "mind", "title": "Skill Focus", "goal": "<string>"}},
+                {{ "category": "soul", "title": "Calm Focus", "goal": "<string>" }},
+                {{ "category": "body", "title": "Healthy Energy", "goal": "<string>" }},
+                {{ "category": "mind", "title": "Application Step", "goal": "<string>" }},
+                {{ "category": "soul", "title": "Positive Spirit", "goal": "<string>" }}
             ]
             }}
 

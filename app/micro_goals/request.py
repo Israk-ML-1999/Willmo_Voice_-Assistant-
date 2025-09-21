@@ -9,6 +9,7 @@ class micro_goal_request(BaseModel):
     tasks: Optional[List[Dict[Any,Any]]] = None
 
 class DayPlan(BaseModel):
+    category: str
     title: str
     goal: str
 
