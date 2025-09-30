@@ -3,11 +3,21 @@ from app.micro_goals.router import router as microgoals_router
 from app.Voice_assistant.voice_router import router as voice_router 
 from app.chat.chat_router import router as chat_router
 from app.config import settings
+from fastapi.middleware.cors import CORSMiddleware 
 
 app = FastAPI(
     title=settings.APP_NAME,
     description=settings.APP_DESCRIPTION,
     version=settings.APP_VERSION,
+)
+
+# Fixed middleware configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 # Mount routers
