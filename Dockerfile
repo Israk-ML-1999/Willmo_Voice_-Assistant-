@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     net-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Set the working directory in the container main code file
 WORKDIR /app
 
 # Copy the requirements file into the container
