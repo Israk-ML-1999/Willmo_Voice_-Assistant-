@@ -1,6 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 import io
+import os
 
 from app.Voice_assistant.voice_request import VoiceToTextResponse, TTSRequest
 from app.Voice_assistant.speech_service import speech_service
@@ -51,11 +52,9 @@ async def convert_text_to_speech(request: TTSRequest):
         raise HTTPException(status_code=400, detail="Gender must be 'male' or 'female'")
 
     try:
-        audio_file_path = speech_service.text_to_speech(request.text, request.gender)
-        return FileResponse(
-            audio_file_path,
-            media_type="audio/mpeg",
-            filename="response.mp3"
-        )
+        # Call the async text_to_speech method
+        audio_url = await speech_service.text_to_speech(request.text, request.gender)
+        return {"audio_url": audio_url}
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error converting text to speech: {str(e)}")

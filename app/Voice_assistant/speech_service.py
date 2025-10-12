@@ -2,6 +2,7 @@ from fastapi import HTTPException
 import os
 import uuid
 import json
+import asyncio
 from pathlib import Path
 from openai import OpenAI
 from app.config import settings
@@ -18,10 +19,13 @@ class SpeechService:
             base_url=settings.OPENAI_API_BASE
         )
 
-        os.makedirs(settings.TEMP_DIR, exist_ok=True)
+        # Ensure audio directory exists
         os.makedirs(settings.AUDIO_RESPONSE_PATH, exist_ok=True)
+        print(f"[TTS] Audio directory path: {settings.AUDIO_RESPONSE_PATH}")
+        print(f"[TTS] Audio directory exists: {os.path.exists(settings.AUDIO_RESPONSE_PATH)}")
+        print(f"[TTS] Audio directory is writable: {os.access(settings.AUDIO_RESPONSE_PATH, os.W_OK)}")
 
-    def text_to_speech(self, text: str, gender: str = "female") -> str:
+    async def text_to_speech(self, text: str, gender: str = "female") -> str:
         """Convert text to speech using OpenAI TTS with gender selection and language detection"""
         try:
             # Detect language
@@ -38,22 +42,49 @@ class SpeechService:
             
             voice = voice_map.get(gender.lower(), "coral")
             
-            # Generate audio using OpenAI TTS
-            response = self.client.audio.speech.create(
-                model="gpt-4o-mini-tts",
-                voice=voice,
-                input=text,
-                response_format="mp3"
-            )
-            
-            # Save audio file
+            # Generate unique filename
             filename = f"response_{uuid.uuid4()}.mp3"
             file_path = os.path.join(settings.AUDIO_RESPONSE_PATH, filename)
             
-            with open(file_path, "wb") as f:
-                f.write(response.content)
+            # Enhanced logging for debugging file paths
+            print(f"[TTS] Audio path configuration:")
+            print(f"[TTS] - AUDIO_RESPONSE_PATH: {settings.AUDIO_RESPONSE_PATH}")
+            print(f"[TTS] - Target file path: {file_path}")
+            print(f"[TTS] - Path exists: {os.path.exists(settings.AUDIO_RESPONSE_PATH)}")
+            print(f"[TTS] - Path is writable: {os.access(settings.AUDIO_RESPONSE_PATH, os.W_OK)}")
+            print(f"[TTS] - Path absolute: {os.path.abspath(settings.AUDIO_RESPONSE_PATH)}")
             
-            return file_path
+            # Use streaming response to write directly to file
+            def sync_write():
+                with self.client.audio.speech.with_streaming_response.create(
+                    model="gpt-4o-mini-tts",
+                    voice=voice,
+                    input=text
+                ) as response:
+                    response.stream_to_file(str(file_path))
+            
+            # Run the sync operation in the background
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, sync_write)
+            
+            # Enhanced logging for file save verification
+            file_exists = os.path.exists(file_path)
+            file_size = os.path.getsize(file_path) if file_exists else 0
+            print(f"[TTS] File save status:")
+            print(f"[TTS] - Path: {file_path}")
+            print(f"[TTS] - Exists: {file_exists}")
+            print(f"[TTS] - Size: {file_size} bytes")
+            print(f"[TTS] - Readable: {os.access(file_path, os.R_OK) if file_exists else False}")
+            
+            if not file_exists or file_size == 0:
+                raise HTTPException(status_code=500, detail=f"Failed to save audio file or file is empty at: {file_path}")
+            
+            # Build public URL
+            base_url = getattr(settings, "AUDIO_PUBLIC_URL", None) or getattr(settings, "AUDIO_BASE_URL", None) or "http://localhost:8089"
+            audio_url = f"{base_url.rstrip('/')}/audio/{filename}"
+            print(f"[TTS] Returning public URL: {audio_url}")
+            
+            return audio_url
             
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error converting text to speech: {str(e)}")

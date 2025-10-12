@@ -19,6 +19,8 @@ Thumbs.db
 # Logs
 *.log
 
+/audio
+
 # Test outputs
 htmlcov/
 coverage.xml

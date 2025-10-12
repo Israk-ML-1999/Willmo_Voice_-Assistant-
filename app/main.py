@@ -4,6 +4,7 @@ from app.Voice_assistant.voice_router import router as voice_router
 from app.chat.chat_router import router as chat_router
 from app.config import settings
 from fastapi.middleware.cors import CORSMiddleware 
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -20,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+app.mount("/audio", StaticFiles(directory="/app/audio"), name="audio")
 # Mount routers
 app.include_router(microgoals_router, prefix="/api/microgoals", tags=["Micro Goals"])
 app.include_router(voice_router, prefix="/api/voice", tags=["Voice Assistant"])
