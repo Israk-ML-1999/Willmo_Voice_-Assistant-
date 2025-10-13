@@ -9,12 +9,6 @@ class TTSRequest(BaseModel):
     text: str
     gender: str = "female"  # "male" or "female"
 
-class TTSRequest(BaseModel):
-    audio_url: str    
-
 class VoiceToTextResponse(BaseModel):
     transcribed_text: str
     filename: str
-
-
-    
