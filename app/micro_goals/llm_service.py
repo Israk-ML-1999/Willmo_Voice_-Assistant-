@@ -20,12 +20,18 @@ class Micro_goal:
         return response
 
     def create_prompt(self, input_data: dict) -> str:
+            # Derive allowed categories from userdata (comma-separated), fallback to all if empty
+            raw_userdata = str(input_data.get('userdata', '') or '')
+            parsed_categories = [c.strip().lower() for c in raw_userdata.split(',') if c.strip()]
+            valid_categories = ["mind", "soul", "body", "purpose", "spirituality"]
+            allowed_categories = [c for c in parsed_categories if c in valid_categories] or valid_categories
+
             return f"""You are an AI assistant specialized in creating personalized micro goals for one day. Your task is to generate a daily plan based on the user's information, ensuring the content is age-appropriate and actionable.
 
             **Age Safety & Style:**
-            - Ages 0–12: Fun, friendly, educational. Allowed: school topics, homework, daily life, simple games. Forbid: job tips, career advice, interview prep, adult topics.
-            - Ages 13–17: Practical, motivational, study-focused personal growth; general job tips/interview basics/resume tips allowed. Avoid adult-specific content (e.g., sexual content). Health/fitness → only general, safe guidance.
-            - Ages 18+: Professional, goal-oriented, personalized; allowed: career development, interview prep, personal development, fitness/health goals.
+            - Ages 0–12: Fun, friendly, educational. Allowed: school topics, homework, daily life, simple games. fitness routine task allowed,(give General fitness routine task), hobbies allowed, Forbid: job tips, career advice, interview prep, job posting  adult topics.
+            - Ages 13–17: Practical, motivational, study-focused personal growth; general job tips/interview basics/resume tips allowed. createa fitness routine task, goals, mental peace, project, hobbies, Avoid adult-specific content (e.g., sexual content). Health/fitness → only general, safe guidance.
+            - Ages 18+: Professional, goal-oriented, personalized; allowed: career development, interview prep, personal development, fitness/health goals, mental peace, project hobbies, job posting, job tips, career advice, interview prep.
 
             **CRITICAL: Task Uniqueness Requirements:**
             - NEVER repeat or suggest tasks that are already in the past tasks list
@@ -35,24 +41,23 @@ class Micro_goal:
             - Review the past tasks carefully before generating new ones
 
             **Planning Instructions:**
-            1) Analyze: user age, current state (mind, soul, body, purpose, spirituality, etc.), and the Big Goal.
+            1) Analyze: user age, allowed focus areas, and the Big Goal.
             2) Review past tasks: {input_data['tasks']} - AVOID all of these completely.
             3) Generate: EXACTLY 5 NEW, UNIQUE daily micro plans aligned to the Big Goal.
-            4) Verify: Each task is completely different from past suggestions.
-            5) Ensure: age-appropriate, actionable tasks that haven't been suggested before.
-            6) Balance: include tasks that reflect mind, soul/spirituality, and body when relevant.
-            7) Assign categories: "mind" for learning/skills, "soul" for emotional/spiritual, "body" for physical health.
-            8) Output: ONLY JSON (no extra text), short and clear.
+            4) Categories MUST be restricted to ONLY these: {allowed_categories}. DO NOT invent other categories.
+            5) If exactly one category is provided, ALL 5 tasks MUST use that category. If two are provided, use ONLY those two across all 5 tasks.
+            6) Ensure: age-appropriate, actionable tasks that haven't been suggested before.
+            7) Output: ONLY JSON (no extra text), short and clear.
 
             **JSON Output Contract (strict):**
             {{
             "big_goal": "{input_data['big_goal']}",
             "day_plan": [
-                {{ "category": "mind", "title": "Skill Focus", "goal": "<string>"}},
-                {{ "category": "soul", "title": "Calm Focus", "goal": "<string>" }},
-                {{ "category": "body", "title": "Healthy Energy", "goal": "<string>" }},
-                {{ "category": "mind", "title": "Application Step", "goal": "<string>" }},
-                {{ "category": "soul", "title": "Positive Spirit", "goal": "<string>" }}
+                {{ "category": "<one of {allowed_categories}>", "title": "<short task title>", "goal": "<string>" }},
+                {{ "category": "<one of {allowed_categories}>", "title": "<short task title>", "goal": "<string>" }},
+                {{ "category": "<one of {allowed_categories}>", "title": "<short task title>", "goal": "<string>" }},
+                {{ "category": "<one of {allowed_categories}>", "title": "<short task title>", "goal": "<string>" }},
+                {{ "category": "<one of {allowed_categories}>", "title": "<short task title>", "goal": "<string>" }}
             ]
             }}
 
@@ -60,6 +65,7 @@ class Micro_goal:
             - big_goal: {input_data['big_goal']}
             - age: {input_data['age']}
             - userdata: {input_data['userdata']}
+            - allowed_categories: {allowed_categories}
             - past tasks to AVOID: {input_data['tasks']}
 
             **MANDATORY RULES:**
@@ -67,7 +73,7 @@ class Micro_goal:
             2. Each task must be completely new and unique
             3. Be creative and think of alternative approaches to support the big goal
             4. Tasks must be age-appropriate and actionable
-            5. Maintain balance between mind, body, and soul/spirituality when relevant
+            5. Use ONLY the allowed categories listed above; no others are permitted
             6. If you're running out of ideas, think of different contexts, methods, or perspectives
 
             **Return ONLY the JSON object above. No additional commentary.**
