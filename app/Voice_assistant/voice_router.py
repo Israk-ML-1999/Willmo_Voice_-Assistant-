@@ -12,10 +12,24 @@ router = APIRouter(tags=["Voice Assistant"])
 @router.post("/voice-to-text", response_model=VoiceToTextResponse, summary="Convert voice to text")
 async def convert_voice_to_text(audio: UploadFile = File(...)):
     """Convert uploaded voice file to text using Whisper"""
-    if not audio.content_type or not audio.content_type.startswith('audio/'):
+
+    # Allowed MIME types for MP3, WAV, and AAC
+    allowed_types = {
+    "audio/mpeg",      # MP3
+    "audio/wav",       # WAV
+    "audio/aac",       # AAC
+    "audio/mp4",       # M4A (iPhone)
+    "audio/x-m4a",     # Another M4A MIME
+    "audio/vnd.dlna.adts",  # AAC (ADTS container - Android)
+    "application/octet-stream"  # fallback when client doesn't send proper type
+    }
+
+
+    # Validate content type
+    if not audio.content_type or audio.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,
-            detail=f"File must be an audio file. Got content type: {audio.content_type}"
+            detail=f"Unsupported file type: {audio.content_type}. Allowed types are: MP3, WAV, AAC."
         )
 
     try:
