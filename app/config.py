@@ -31,7 +31,7 @@ class Settings:
     
     # ── Audio Configuration 
 
-    AUDIO_BASE_URL="http://206.162.244.175:8089"
+    AUDIO_BASE_URL="http://31.97.146.169:8089"
     
     TEMP_DIR: str = "/app/temp"
     AUDIO_RESPONSE_PATH: str = "/app/audio"  # Fixed path that matches Docker volume mount
